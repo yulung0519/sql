@@ -205,5 +205,12 @@ Consider, for example, concepts of fariness, inequality, social structures, marg
 
 
 ```
-Your thoughts...
+Your thoughts:
+I was born and grew up in Taiwan. Our country also employed a digital ID system. Although Taiwan has multiple ethnic groups, such as the Han Chinese and the Indigenous populations, the ID system is built based on the Han-centric value system. In particular, the official name printed on the ID card follows the naming rules of a Han Chinese person, i.e., Family name, first name. It created serious issues when an Indigenous person wants to register their Indigenous name, as many of their names do not follow the Han naming rules. Also, the Indigenous name may not be able to be spelled using Chinese characters because Indigenous people have their own languages. Fortunately, several major changes were made to the ID system to integrate a more flexible approach to using the Indigenous name last year.  
+
+Another issue related to the digital ID system in Taiwan is the list of birth parents on the ID card. The ID system only recognizes and records the birth parents if the child was born within a legal marriage. If a child is born to common-law parents, the child’s father or mother must complete the paternity acknowledgement process or undergo genetic testing to be listed in the ID system. This process reinforces the social norm that a child is expected to be born only within a marriage, which ignores the various types of marriage and ways of parenting nowadays. It also stigmatized children who were born outside of a legal marriage. 
+Although the population ID system is important for understanding the sociodemographic characteristics of a country and distributing essential resources, it may create additional barriers and even harm certain marginalized groups within a society. It is crucial to unpack the values embedded in these systems and redesign them based on the needs of the people. 
+
+
+
 ```
