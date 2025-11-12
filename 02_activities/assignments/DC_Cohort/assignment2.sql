@@ -20,6 +20,15 @@ The `||` values concatenate the columns into strings.
 Edit the appropriate columns -- you're making two edits -- and the NULL rows will be fixed. 
 All the other rows will remain the same.) */
 
+SELECT
+	product_name || ', ' || product_size|| ' (' || product_qty_type || ')'
+FROM product;
+
+SELECT
+	coalesce(product_name, '')|| ','||
+	coalesce(product_size, '')|| '('||
+	coalesce(product_qty_type, 'unit')|| ')'
+FROM product;
 
 
 --Windowed Functions
@@ -32,16 +41,56 @@ each new market date for each customer, or select only the unique market dates p
 (without purchase details) and number those visits. 
 HINT: One of these approaches uses ROW_NUMBER() and one uses DENSE_RANK(). */
 
+SELECT
+	product_id,
+	vendor_id,
+	market_date,
+	customer_id,
+	
+row_number() OVER(partition BY customer_id ORDER BY market_date) as visit_number
+
+FROM customer_purchases;
+
 
 
 /* 2. Reverse the numbering of the query from a part so each customer’s most recent visit is labeled 1, 
 then write another query that uses this one as a subquery (or temp table) and filters the results to 
 only the customer’s most recent visit. */
 
+SELECT
+	product_id,
+	vendor_id,
+	market_date,
+	customer_id,
+	row_number() OVER(partition BY customer_id ORDER BY market_date DESC) as visit_number
+
+FROM customer_purchases;
+
+SELECT *
+FROM (
+SELECT
+	product_id,
+	vendor_id,
+	market_date,
+	customer_id,
+	row_number() OVER(partition BY customer_id ORDER BY market_date DESC) as visit_number
+
+FROM customer_purchases
+
+) AS recent_visit
+WHERE visit_number =1; 
+
 
 
 /* 3. Using a COUNT() window function, include a value along with each row of the 
 customer_purchases table that indicates how many different times that customer has purchased that product_id. */
+ 
+ SELECT  
+ customer_id,
+ product_id, 
+ market_date,
+ count(*) OVER (PARTITION BY customer_id, product_id) as times_of_purchases
+ from customer_purchases;
 
 
 
@@ -57,9 +106,24 @@ Remove any trailing or leading whitespaces. Don't just use a case statement for 
 
 Hint: you might need to use INSTR(product_name,'-') to find the hyphens. INSTR will help split the column. */
 
+SELECT product_name,
+CASE
+	WHEN instr(product_name, '-') >0 THEN
+		trim(SUBSTR(product_name, INSTR(product_name, '-')+1))
+	ELSE NULL
+	END as desription 
+FROM product;
+
 
 
 /* 2. Filter the query to show any product_size value that contain a number with REGEXP. */
+SELECT
+product_id,
+product_name,
+product_size
+
+FROM product
+WHERE product_size REGEXP '[0-9]';
 
 
 
@@ -73,6 +137,31 @@ HINT: There are a possibly a few ways to do this query, but if you're struggling
 3) Query the second temp table twice, once for the best day, once for the worst day, 
 with a UNION binding them. */
 
+CREATE temporary table sales_date AS
+SELECT market_date,
+SUM(quantity*cost_to_customer_per_qty) as sales
+from customer_purchases
+Group By market_date;
+
+
+CREATE TEMPORARY table ranked AS
+SELECT market_date,
+sales,
+rank() OVER (ORDER BY sales DESC) AS high_rank,
+rank() OVER (ORDER BY sales ASC)  AS low_rank
+From sales_date;
+
+SELECT market_date, sales, 
+'best day' AS category
+from ranked
+where high_rank=1
+
+UNION
+
+SELECT market_date, sales, 
+'worst day' AS category
+from ranked
+where low_rank=1;
 
 
 
@@ -89,6 +178,46 @@ Think a bit about the row counts: how many distinct vendors, product names are t
 How many customers are there (y). 
 Before your final group by you should have the product of those two queries (x*y).  */
 
+DROP TABLE IF EXISTS TEMP.vendor_products;
+CREATE TEMP TABLE vendor_products AS
+SELECT 
+    vi.vendor_id,
+	vi.product_id,
+	vi.original_price,
+    v.vendor_name,
+    p.product_name,
+    vi.original_price
+FROM vendor_inventory vi
+Left JOIN vendor v ON vi.vendor_id=v.vendor_id
+Left JOIN product p ON vi.product_id = p.product_id;
+
+
+DROP TABLE IF EXISTS TEMP.all_customers;
+CREATE TEMP TABLE all_customers AS
+SELECT customer_id
+FROM customer;
+
+
+DROP TABLE IF EXISTS TEMP.vendor_sales;
+CREATE TEMP TABLE vendor_sales AS
+SELECT 
+	vp.vendor_name,
+	vp.product_name,
+	vp.original_price,
+	c.customer_id
+from vendor_products vp
+CROSS JOIN all_customers c;
+
+
+SELECT 
+    vendor_name,
+    product_name,
+    SUM(original_price * 5) AS total_revenue
+FROM vendor_sales
+GROUP BY vendor_name, product_name;
+
+
+
 
 
 -- INSERT
@@ -98,9 +227,33 @@ It should use all of the columns from the product table, as well as a new column
 Name the timestamp column `snapshot_timestamp`. */
 
 
+CREATE TABLE product_units AS
+SELECT*, 
+    CURRENT_TIMESTAMP AS snapshot_timestamp
+FROM product 
+WHERE product_qty_type = 'unit';
+
+
 
 /*2. Using `INSERT`, add a new row to the product_units table (with an updated timestamp). 
 This can be any product you desire (e.g. add another record for Apple Pie). */
+
+INSERT INTO product_units (
+    product_id,
+    product_name,
+	product_size,
+	product_category_id,
+    product_qty_type,
+    snapshot_timestamp
+)
+VALUES (
+    50,                    
+    'Apple Pie',             
+    '24"',
+	8,
+	'unit',                  
+    CURRENT_TIMESTAMP        
+);
 
 
 
@@ -108,6 +261,14 @@ This can be any product you desire (e.g. add another record for Apple Pie). */
 /* 1. Delete the older record for the whatever product you added. 
 
 HINT: If you don't specify a WHERE clause, you are going to have a bad time.*/
+
+DELETE FROM product_units
+WHERE product_name = 'Apple Pie'
+AND snapshot_timestamp = (
+    SELECT MIN(snapshot_timestamp)
+    FROM product_units
+    WHERE product_name = 'Apple Pie'
+);
 
 
 
@@ -129,5 +290,23 @@ Finally, make sure you have a WHERE statement to update the right row,
 When you have all of these components, you can run the update statement. */
 
 
+ALTER TABLE product_units
+ADD current_quantity INT;
 
 
+SELECT product_id, quantity
+from vendor_inventory vi
+where market_date =(
+SELECT max (market_date)
+from vendor_inventory
+where product_id = vi.product_id
+);
+
+UPDATE product_units 
+SET current_quantity = COALESCE((
+    SELECT vi.quantity
+    FROM vendor_inventory vi
+    WHERE vi.product_id = product_units.product_id
+    ORDER BY vi.vendor_id DESC
+    LIMIT 1
+), 0);
