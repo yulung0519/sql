@@ -55,6 +55,14 @@ The store wants to keep customer addresses. Propose two architectures for the CU
 
 ```
 Your answer...
+
+Type 1 architecture refers to the table that overwrites the changes, and Type 2 refers to the table that retains changes. For both 
+
+For Type 1, the customer_address table contains only one address, which is linked to the customer table by customer_ID. If a new address is added to the same customer, the old address will be overwritten. No historical record will be kept. 
+
+For type two, the customer_address table contains address_ID, customer_ID, address details, and effective start and end dates. A customer may have multiple rows saved in the customer_address table by their customer_ID. 
+
+
 ```
 
 ***
@@ -183,5 +191,10 @@ Consider, for example, concepts of labour, bias, LLM proliferation, moderating c
 
 
 ```
-Your thoughts...
+The article uses ImageNet as an example to guide readers through the development of image recognition from its origins in the 1960s. Nowadays, launching a new AI technology is often described as an unprecedented innovation, overlooking the invisible labour force (many of whom are students!) and fundamental sources that actually formed the foundation of the technology. Most of the behind-the-scenes factors are actually created by human beings, not machines. 
+
+More importantly, the article also discussed the bias that machine learning can produce and how it can be harmful. For example, the ImageNet Roulette project highlighted the biases that ImageNet can generate by assigning labels to portrait photos. Interestingly, the initial step ImageNet took to address these issues was manual. Without carefully analysing the potential human biases involved in creating the datasets and values systems embedded in the technology, users might overlook and unintentionally reproduce some results, which could reinforce the bias or cause harm to others. 
+
+The article also brings me to think about the use of AI in social work, my field of study. Many scholars argue that social work is an art that requires knowledge of human development, social systems, and intervention skills to work with clients and their environments. Using AI technology in social work practice, such as assessment, interviewing, training, and intervention planning, needs careful examination and ethical considerations before implementation. The article provides me with a new perspective and ways to reconsider AI tools in social work. 
+
 ```
